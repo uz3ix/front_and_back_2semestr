@@ -110,7 +110,6 @@ body {
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
-  border: 2px solid #3498db;
 }
 .product-card__btn--secondary:hover {
   transform: translateY(-2px);
@@ -118,6 +117,9 @@ body {
 }
 .product-card__btn--secondary:active {
   transform: translateY(0);
+}
+.product-card__btn--secondary {
+  border: 2px solid #3498db;
 }
 .product-card__badge {
   position: absolute;

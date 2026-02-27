@@ -30,14 +30,6 @@ app.get("/", (req, res) => {
   res.send("Сайт работает");
 });
 
-/**
- * CRUD для товаров:
- * - GET    /products         -> все товары
- * - GET    /products/:id     -> товар по id
- * - POST   /products         -> добавить товар
- * - PATCH  /products/:id     -> редактировать товар
- * - DELETE /products/:id     -> удалить товар
- */
 
 // READ all
 app.get("/products", (req, res) => {
