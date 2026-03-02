@@ -46,8 +46,6 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-
-// CORS для фронтенда на 3001
 app.use(
   cors({
     origin: "http://localhost:3001",
@@ -71,7 +69,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 10 товаров
 let products = [
   {
     id: nanoid(6),
@@ -175,7 +172,6 @@ let products = [
   },
 ];
 
-// Вспомогательные функции
 function findProductOr404(id, res) {
   const item = products.find((p) => p.id === id);
   if (!item) {

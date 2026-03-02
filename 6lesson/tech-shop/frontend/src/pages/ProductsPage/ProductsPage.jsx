@@ -80,7 +80,6 @@ export default function ProductsPage() {
       <header className="header">
         <div className="header__inner">
           <div className="brand">TechStore</div>
-          <div className="header__right">React + Express</div>
         </div>
       </header>
 
@@ -102,7 +101,7 @@ export default function ProductsPage() {
       </main>
 
       <footer className="footer">
-        <div className="footer__inner">© {new Date().getFullYear()} TechStore</div>
+        <div className="footer__inner">Демидов Иван</div>
       </footer>
 
       <ProductModal
