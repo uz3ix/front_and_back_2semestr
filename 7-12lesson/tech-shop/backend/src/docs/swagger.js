@@ -6,7 +6,7 @@ const swaggerSpec = swaggerJsdoc({
     info: {
       title: "Tech Shop API",
       version: "1.0.0",
-      description: "API для практической работы 8: JWT и защищенные маршруты",
+      description: "API для практических работ 8-9: JWT, защищенные маршруты и refresh-токены",
     },
     servers: [
       {
@@ -20,6 +20,11 @@ const swaggerSpec = swaggerJsdoc({
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
+        },
+        refreshHeader: {
+          type: "apiKey",
+          in: "header",
+          name: "x-refresh-token",
         },
       },
       schemas: {
@@ -70,10 +75,11 @@ const swaggerSpec = swaggerJsdoc({
             price: { type: "number", example: 99990 },
           },
         },
-        AccessTokenResponse: {
+        TokensResponse: {
           type: "object",
           properties: {
             accessToken: { type: "string" },
+            refreshToken: { type: "string" },
           },
         },
         ErrorResponse: {
@@ -118,7 +124,7 @@ const swaggerSpec = swaggerJsdoc({
       "/api/auth/login": {
         post: {
           tags: ["Auth"],
-          summary: "Вход и выдача JWT",
+          summary: "Вход и выдача пары токенов",
           requestBody: {
             required: true,
             content: {
@@ -129,16 +135,44 @@ const swaggerSpec = swaggerJsdoc({
           },
           responses: {
             200: {
-              description: "JWT access token",
+              description: "Access и refresh токены",
               content: {
                 "application/json": {
-                  schema: { $ref: "#/components/schemas/AccessTokenResponse" },
+                  schema: { $ref: "#/components/schemas/TokensResponse" },
                 },
               },
             },
             400: { description: "Ошибка валидации" },
             401: { description: "Неверные учетные данные" },
             404: { description: "Пользователь не найден" },
+          },
+        },
+      },
+      "/api/auth/refresh": {
+        post: {
+          tags: ["Auth"],
+          summary: "Обновить access и refresh токены",
+          security: [{ refreshHeader: [] }],
+          parameters: [
+            {
+              in: "header",
+              name: "x-refresh-token",
+              required: true,
+              schema: { type: "string" },
+              description: "Refresh-токен для получения новой пары токенов",
+            },
+          ],
+          responses: {
+            200: {
+              description: "Новая пара токенов",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/TokensResponse" },
+                },
+              },
+            },
+            400: { description: "Refresh-токен не передан" },
+            401: { description: "Refresh-токен невалиден или истек" },
           },
         },
       },

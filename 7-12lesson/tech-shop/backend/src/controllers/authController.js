@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { nanoid } = require("nanoid");
 
+const { addRefreshToken, hasRefreshToken, removeRefreshToken } = require("../data/refreshTokensStore");
 const { addUser, findUserByEmail } = require("../data/usersStore");
 const { sanitizeUser } = require("../utils/users");
 const {
@@ -9,8 +10,53 @@ const {
   normalizeAndValidateRegister,
 } = require("../validators/authValidators");
 
-const JWT_SECRET = "access_secret";
+const ACCESS_SECRET = "access_secret";
+const REFRESH_SECRET = "refresh_secret";
 const ACCESS_EXPIRES_IN = "15m";
+const REFRESH_EXPIRES_IN = "7d";
+
+function generateAccessToken(user) {
+  return jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+    },
+    ACCESS_SECRET,
+    {
+      expiresIn: ACCESS_EXPIRES_IN,
+    }
+  );
+}
+
+function generateRefreshToken(user) {
+  return jwt.sign(
+    {
+      sub: user.id,
+      email: user.email,
+      jti: nanoid(10),
+    },
+    REFRESH_SECRET,
+    {
+      expiresIn: REFRESH_EXPIRES_IN,
+    }
+  );
+}
+
+function getRefreshTokenFromHeaders(req) {
+  const headerToken = req.headers["x-refresh-token"];
+  if (headerToken) {
+    return String(headerToken).trim();
+  }
+
+  const authHeader = req.headers.authorization || "";
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme === "Bearer" && token) {
+    return token;
+  }
+
+  return "";
+}
 
 async function register(req, res) {
   const { ok, errors, value } = normalizeAndValidateRegister(req.body);
@@ -52,18 +98,49 @@ async function login(req, res) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const accessToken = jwt.sign(
-    {
-      sub: user.id,
-      email: user.email,
-    },
-    JWT_SECRET,
-    {
-      expiresIn: ACCESS_EXPIRES_IN,
-    }
-  );
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  addRefreshToken(refreshToken);
 
-  return res.status(200).json({ accessToken });
+  return res.status(200).json({
+    accessToken,
+    refreshToken,
+  });
+}
+
+function refresh(req, res) {
+  const refreshToken = getRefreshTokenFromHeaders(req);
+
+  if (!refreshToken) {
+    return res.status(400).json({ error: "refreshToken is required" });
+  }
+
+  if (!hasRefreshToken(refreshToken)) {
+    return res.status(401).json({ error: "Invalid refresh token" });
+  }
+
+  try {
+    const payload = jwt.verify(refreshToken, REFRESH_SECRET);
+    const user = findUserByEmail(payload.email);
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    removeRefreshToken(refreshToken);
+
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+    addRefreshToken(newRefreshToken);
+
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    removeRefreshToken(refreshToken);
+    return res.status(401).json({ error: "Invalid or expired refresh token" });
+  }
 }
 
 function me(req, res) {
@@ -73,5 +150,6 @@ function me(req, res) {
 module.exports = {
   login,
   me,
+  refresh,
   register,
 };
