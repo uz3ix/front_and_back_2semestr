@@ -8,6 +8,16 @@ const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem("accessToken");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 export const api = {
   getProducts: async () => (await apiClient.get("/products")).data,
 
@@ -15,7 +25,7 @@ export const api = {
 
   createProduct: async (payload) => (await apiClient.post("/products", payload)).data,
 
-  updateProduct: async (id, payload) => (await apiClient.patch(`/products/${id}`, payload)).data,
+  updateProduct: async (id, payload) => (await apiClient.put(`/products/${id}`, payload)).data,
 
   deleteProduct: async (id) => (await apiClient.delete(`/products/${id}`)).data,
 };
