@@ -1,0 +1,142 @@
+.authPage {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.18), transparent 28%),
+    linear-gradient(135deg, #f5efe4 0%, #fffaf3 48%, #efe3d0 100%);
+  color: #1f2937;
+}
+
+.authHero {
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.authHero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(42px, 6vw, 72px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.authHero p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(31, 41, 55, 0.78);
+}
+
+.authHero__badge {
+  width: fit-content;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 83, 9, 0.14);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.authCard {
+  margin: 32px;
+  padding: 28px;
+  align-self: center;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 83, 9, 0.14);
+  box-shadow: 0 24px 70px rgba(120, 53, 15, 0.15);
+  backdrop-filter: blur(18px);
+}
+
+.authTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.authTab {
+  padding: 13px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(217, 119, 6, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+  color: #92400e;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.authTab--active {
+  background: linear-gradient(135deg, #b45309, #f97316);
+  color: #fff7ed;
+  border-color: transparent;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.authField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.authInput {
+  padding: 13px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.authError {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.authSubmit {
+  margin-top: 8px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #b45309, #f97316);
+  color: #fff7ed;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.authSubmit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+@media (max-width: 900px) {
+  .authPage {
+    grid-template-columns: 1fr;
+  }
+
+  .authHero {
+    padding: 36px 24px 10px;
+  }
+
+  .authCard {
+    margin: 0 16px 24px;
+  }
+}

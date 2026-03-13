@@ -1,26 +1,27 @@
 import React from "react";
 
-export default function ProductItem({ product, onEdit, onDelete }) {
+export default function ProductItem({ product, onView, onEdit, onDelete }) {
   return (
-    <div className="card">
-      <div className="muted">ID: {product.id}</div>
-      <div className="cardTitle">{product.title}</div>
-      <div className="muted">Категория: {product.category}</div>
-
-      <div className="desc">{product.description}</div>
-
-      <div className="priceRow">
-        <div className="price">{product.price} ₽</div>
+    <article className="productCard">
+      <div className="productCard__meta">ID: {product.id}</div>
+      <h3>{product.title}</h3>
+      <div className="productCard__category">{product.category}</div>
+      <p>{product.description}</p>
+      <div className="productCard__footer">
+        <strong>{product.price} ₽</strong>
       </div>
 
-      <div className="actions">
-        <button className="btn" onClick={() => onEdit(product)}>
+      <div className="productCard__actions">
+        <button type="button" className="secondaryButton" onClick={() => onView(product.id)}>
+          Подробнее
+        </button>
+        <button type="button" className="secondaryButton" onClick={() => onEdit(product)}>
           Редактировать
         </button>
-        <button className="btn btn--danger" onClick={() => onDelete(product.id)}>
+        <button type="button" className="dangerButton" onClick={() => onDelete(product.id)}>
           Удалить
         </button>
       </div>
-    </div>
+    </article>
   );
 }
