@@ -9,14 +9,14 @@ const {
 } = require("../data/productsStore");
 const { normalizeAndValidateProduct } = require("../validators/productValidators");
 
-function createProduct(req, res) {
+async function createProduct(req, res) {
   const { ok, errors, value } = normalizeAndValidateProduct(req.body);
 
   if (!ok) {
     return res.status(400).json({ error: "Validation error", details: errors });
   }
 
-  const product = addProduct({
+  const product = await addProduct({
     id: nanoid(6),
     ...value,
   });
@@ -24,12 +24,12 @@ function createProduct(req, res) {
   return res.status(201).json(product);
 }
 
-function getProducts(req, res) {
-  return res.status(200).json(getAllProducts());
+async function getProducts(req, res) {
+  return res.status(200).json(await getAllProducts());
 }
 
-function getProductById(req, res) {
-  const product = findProductById(req.params.id);
+async function getProductById(req, res) {
+  const product = await findProductById(req.params.id);
 
   if (!product) {
     return res.status(404).json({ error: "Product not found" });
@@ -38,8 +38,8 @@ function getProductById(req, res) {
   return res.status(200).json(product);
 }
 
-function replaceProduct(req, res) {
-  const product = findProductById(req.params.id);
+async function replaceProduct(req, res) {
+  const product = await findProductById(req.params.id);
 
   if (!product) {
     return res.status(404).json({ error: "Product not found" });
@@ -51,11 +51,11 @@ function replaceProduct(req, res) {
     return res.status(400).json({ error: "Validation error", details: errors });
   }
 
-  return res.status(200).json(updateProduct(req.params.id, value));
+  return res.status(200).json(await updateProduct(req.params.id, value));
 }
 
-function deleteProduct(req, res) {
-  const removed = removeProduct(req.params.id);
+async function deleteProduct(req, res) {
+  const removed = await removeProduct(req.params.id);
 
   if (!removed) {
     return res.status(404).json({ error: "Product not found" });

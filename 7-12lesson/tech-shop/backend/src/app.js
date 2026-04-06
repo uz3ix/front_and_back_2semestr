@@ -4,6 +4,7 @@ const swaggerUi = require("swagger-ui-express");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+const userRoutes = require("./routes/userRoutes");
 const { requestLogger } = require("./middleware/requestLogger");
 const { notFoundHandler } = require("./middleware/notFoundHandler");
 const { errorHandler } = require("./middleware/errorHandler");
@@ -16,7 +17,7 @@ function createApp() {
     cors({
       origin: "http://localhost:3001",
       methods: ["GET", "POST", "PUT", "DELETE"],
-      allowedHeaders: ["Content-Type", "Authorization"],
+      allowedHeaders: ["Content-Type", "Authorization", "x-refresh-token"],
     })
   );
   app.use(express.json());
@@ -24,6 +25,7 @@ function createApp() {
 
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api/auth", authRoutes);
+  app.use("/api/users", userRoutes);
   app.use("/api/products", productRoutes);
 
   app.use(notFoundHandler);

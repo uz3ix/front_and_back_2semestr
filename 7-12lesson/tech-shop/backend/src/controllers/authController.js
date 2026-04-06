@@ -20,6 +20,7 @@ function generateAccessToken(user) {
     {
       sub: user.id,
       email: user.email,
+      role: user.role,
     },
     ACCESS_SECRET,
     {
@@ -33,6 +34,7 @@ function generateRefreshToken(user) {
     {
       sub: user.id,
       email: user.email,
+      role: user.role,
       jti: nanoid(10),
     },
     REFRESH_SECRET,
@@ -43,6 +45,11 @@ function generateRefreshToken(user) {
 }
 
 function getRefreshTokenFromHeaders(req) {
+  const bodyToken = req.body?.refreshToken;
+  if (bodyToken) {
+    return String(bodyToken).trim();
+  }
+
   const headerToken = req.headers["x-refresh-token"];
   if (headerToken) {
     return String(headerToken).trim();
@@ -65,17 +72,19 @@ async function register(req, res) {
     return res.status(400).json({ error: "Validation error", details: errors });
   }
 
-  const exists = findUserByEmail(value.email);
+  const exists = await findUserByEmail(value.email);
   if (exists) {
     return res.status(409).json({ error: "User with this email already exists" });
   }
 
-  const user = addUser({
+  const user = await addUser({
     id: nanoid(8),
     email: value.email,
     first_name: value.first_name,
     last_name: value.last_name,
     password: await bcrypt.hash(value.password, 10),
+    role: "user",
+    blocked: false,
   });
 
   return res.status(201).json(sanitizeUser(user));
@@ -88,9 +97,13 @@ async function login(req, res) {
     return res.status(400).json({ error: "Validation error", details: errors });
   }
 
-  const user = findUserByEmail(value.email);
+  const user = await findUserByEmail(value.email);
   if (!user) {
     return res.status(404).json({ error: "User not found" });
+  }
+
+  if (user.blocked) {
+    return res.status(403).json({ error: "User is blocked" });
   }
 
   const isValid = await bcrypt.compare(value.password, user.password);
@@ -100,7 +113,7 @@ async function login(req, res) {
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  addRefreshToken(refreshToken);
+  await addRefreshToken(refreshToken);
 
   return res.status(200).json({
     accessToken,
@@ -108,37 +121,42 @@ async function login(req, res) {
   });
 }
 
-function refresh(req, res) {
+async function refresh(req, res) {
   const refreshToken = getRefreshTokenFromHeaders(req);
 
   if (!refreshToken) {
     return res.status(400).json({ error: "refreshToken is required" });
   }
 
-  if (!hasRefreshToken(refreshToken)) {
+  if (!(await hasRefreshToken(refreshToken))) {
     return res.status(401).json({ error: "Invalid refresh token" });
   }
 
   try {
     const payload = jwt.verify(refreshToken, REFRESH_SECRET);
-    const user = findUserByEmail(payload.email);
+    const user = await findUserByEmail(payload.email);
 
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }
 
-    removeRefreshToken(refreshToken);
+    if (user.blocked) {
+      await removeRefreshToken(refreshToken);
+      return res.status(403).json({ error: "User is blocked" });
+    }
+
+    await removeRefreshToken(refreshToken);
 
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
-    addRefreshToken(newRefreshToken);
+    await addRefreshToken(newRefreshToken);
 
     return res.status(200).json({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     });
   } catch (error) {
-    removeRefreshToken(refreshToken);
+    await removeRefreshToken(refreshToken);
     return res.status(401).json({ error: "Invalid or expired refresh token" });
   }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ProductItem({ product, onView, onEdit, onDelete }) {
+export default function ProductItem({ product, canDelete, canEdit, onView, onEdit, onDelete }) {
   return (
     <article className="productCard">
       <div className="productCard__meta">ID: {product.id}</div>
@@ -15,12 +15,16 @@ export default function ProductItem({ product, onView, onEdit, onDelete }) {
         <button type="button" className="secondaryButton" onClick={() => onView(product.id)}>
           Подробнее
         </button>
-        <button type="button" className="secondaryButton" onClick={() => onEdit(product)}>
-          Редактировать
-        </button>
-        <button type="button" className="dangerButton" onClick={() => onDelete(product.id)}>
-          Удалить
-        </button>
+        {canEdit ? (
+          <button type="button" className="secondaryButton" onClick={() => onEdit(product)}>
+            Редактировать
+          </button>
+        ) : null}
+        {canDelete ? (
+          <button type="button" className="dangerButton" onClick={() => onDelete(product.id)}>
+            Удалить
+          </button>
+        ) : null}
       </div>
     </article>
   );

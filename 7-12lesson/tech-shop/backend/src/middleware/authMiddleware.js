@@ -4,7 +4,7 @@ const { findUserByEmail } = require("../data/usersStore");
 
 const JWT_SECRET = "access_secret";
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const header = req.headers.authorization || "";
   const [scheme, token] = header.split(" ");
 
@@ -16,7 +16,7 @@ function authMiddleware(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const user = findUserByEmail(payload.email);
+    const user = await findUserByEmail(payload.email);
 
     if (!user) {
       return res.status(404).json({
@@ -24,7 +24,16 @@ function authMiddleware(req, res, next) {
       });
     }
 
-    req.user = payload;
+    if (user.blocked) {
+      return res.status(403).json({
+        error: "User is blocked",
+      });
+    }
+
+    req.user = {
+      ...payload,
+      role: user.role,
+    };
     req.currentUser = user;
     return next();
   } catch (error) {

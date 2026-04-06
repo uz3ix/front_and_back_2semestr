@@ -1,0 +1,20 @@
+[
+  {
+    "id": "admin001",
+    "email": "admin@techshop.local",
+    "first_name": "Админ",
+    "last_name": "Системы",
+    "password": "$2b$10$XSWYJTOpz81IKn924xWv7.6f37yQZfvtoKw9zVEMwakJCqZw.dFMa",
+    "role": "admin",
+    "blocked": false
+  },
+  {
+    "id": "seller01",
+    "email": "seller@techshop.local",
+    "first_name": "Ольга",
+    "last_name": "Продавец",
+    "password": "$2b$10$n1ICpBXnE3.uJ.sGqjIs.uvk55T5ZfDuTIMzDRxPOycHV.LgePbR2",
+    "role": "seller",
+    "blocked": false
+  }
+]

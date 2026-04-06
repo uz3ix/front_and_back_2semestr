@@ -1,54 +1,39 @@
-const { nanoid } = require("nanoid");
+const { createJsonStore } = require("./jsonStore");
 
-const products = [
-  {
-    id: nanoid(6),
-    title: "iPhone 15",
-    category: "Смартфоны",
-    description: "6.1'' OLED, 128GB, A16 Bionic",
-    price: 99990,
-  },
-  {
-    id: nanoid(6),
-    title: "Samsung Galaxy S24",
-    category: "Смартфоны",
-    description: "AMOLED 120Hz, 256GB",
-    price: 89990,
-  },
-  {
-    id: nanoid(6),
-    title: "MacBook Air M3",
-    category: "Ноутбуки",
-    description: "13'', 16GB RAM, 512GB SSD",
-    price: 149990,
-  },
-];
 
-function getAllProducts() {
-  return products;
+const productsStore = createJsonStore("products.json", defaultProducts);
+
+async function getAllProducts() {
+  return productsStore.read();
 }
 
-function findProductById(id) {
+async function findProductById(id) {
+  const products = await getAllProducts();
   return products.find((product) => product.id === id) || null;
 }
 
-function addProduct(product) {
+async function addProduct(product) {
+  const products = await getAllProducts();
   products.push(product);
+  await productsStore.write(products);
   return product;
 }
 
-function updateProduct(id, payload) {
-  const product = findProductById(id);
+async function updateProduct(id, payload) {
+  const products = await getAllProducts();
+  const product = products.find((item) => item.id === id);
 
   if (!product) {
     return null;
   }
 
   Object.assign(product, payload);
+  await productsStore.write(products);
   return product;
 }
 
-function removeProduct(id) {
+async function removeProduct(id) {
+  const products = await getAllProducts();
   const index = products.findIndex((product) => product.id === id);
 
   if (index === -1) {
@@ -56,6 +41,7 @@ function removeProduct(id) {
   }
 
   products.splice(index, 1);
+  await productsStore.write(products);
   return true;
 }
 

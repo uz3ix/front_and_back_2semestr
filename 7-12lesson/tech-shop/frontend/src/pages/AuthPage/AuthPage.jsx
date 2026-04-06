@@ -53,12 +53,7 @@ export default function AuthPage({ mode, onModeChange, onLogin, onRegister }) {
   return (
     <div className="authPage">
       <div className="authHero">
-        <div className="authHero__badge">Практика 10</div>
-        <h1>Tech Shop Admin</h1>
-        <p>
-          Используйте регистрацию и вход, чтобы получить JWT-токены, сохранить их на
-          фронтенде и управлять товарами через API.
-        </p>
+        <h1>Tech Shop</h1>
       </div>
 
       <section className="authCard">

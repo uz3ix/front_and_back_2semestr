@@ -1,15 +1,32 @@
-const refreshTokens = new Set();
+const { createJsonStore } = require("./jsonStore");
 
-function addRefreshToken(token) {
-  refreshTokens.add(token);
+const refreshTokensStore = createJsonStore("refreshTokens.json", []);
+
+async function getAllRefreshTokens() {
+  return refreshTokensStore.read();
 }
 
-function hasRefreshToken(token) {
-  return refreshTokens.has(token);
+async function addRefreshToken(token) {
+  const refreshTokens = await getAllRefreshTokens();
+
+  if (!refreshTokens.includes(token)) {
+    refreshTokens.push(token);
+    await refreshTokensStore.write(refreshTokens);
+  }
 }
 
-function removeRefreshToken(token) {
-  refreshTokens.delete(token);
+async function hasRefreshToken(token) {
+  const refreshTokens = await getAllRefreshTokens();
+  return refreshTokens.includes(token);
+}
+
+async function removeRefreshToken(token) {
+  const refreshTokens = await getAllRefreshTokens();
+  const nextTokens = refreshTokens.filter((item) => item !== token);
+
+  if (nextTokens.length !== refreshTokens.length) {
+    await refreshTokensStore.write(nextTokens);
+  }
 }
 
 module.exports = {

@@ -3,15 +3,25 @@ import { useEffect, useState } from "react";
 import { api } from "../../api";
 import ProductModal from "../../components/ProductModal";
 import ProductsList from "../../components/ProductsList";
+import UserModal from "../../components/UserModal";
+import UsersList from "../../components/UsersList";
 import "./ProductsPage.scss";
 
 function getApiErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.error || fallbackMessage;
 }
 
+const ROLE_LABELS = {
+  user: "Пользователь",
+  seller: "Продавец",
+  admin: "Администратор",
+};
+
 export default function ProductsPage({ currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productIdQuery, setProductIdQuery] = useState("");
@@ -20,10 +30,23 @@ export default function ProductsPage({ currentUser, onLogout }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [editingProduct, setEditingProduct] = useState(null);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+
+  const isSeller = currentUser.role === "seller";
+  const isAdmin = currentUser.role === "admin";
+  const canManageProducts = isSeller || isAdmin;
+  const canDeleteProducts = isAdmin;
 
   useEffect(() => {
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadUsers();
+    }
+  }, [isAdmin]);
 
   const loadProducts = async () => {
     try {
@@ -35,6 +58,19 @@ export default function ProductsPage({ currentUser, onLogout }) {
       setErrorMessage(getApiErrorMessage(error, "Не удалось загрузить список товаров."));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      setErrorMessage("");
+      const data = await api.getUsers();
+      setUsers(data);
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, "Не удалось загрузить список пользователей."));
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -53,6 +89,16 @@ export default function ProductsPage({ currentUser, onLogout }) {
   const closeModal = () => {
     setModalOpen(false);
     setEditingProduct(null);
+  };
+
+  const openUserEdit = (user) => {
+    setEditingUser(user);
+    setUserModalOpen(true);
+  };
+
+  const closeUserModal = () => {
+    setEditingUser(null);
+    setUserModalOpen(false);
   };
 
   const handleView = async (productId) => {
@@ -129,12 +175,40 @@ export default function ProductsPage({ currentUser, onLogout }) {
     }
   };
 
+  const handleSubmitUser = async (payload) => {
+    try {
+      setErrorMessage("");
+      setFeedbackMessage("");
+      const updatedUser = await api.updateUser(payload.id, payload);
+      setUsers((prev) => prev.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
+      setFeedbackMessage("Данные пользователя обновлены.");
+      closeUserModal();
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, "Не удалось обновить пользователя."));
+    }
+  };
+
+  const handleBlockUser = async (userId) => {
+    const shouldBlock = window.confirm("Заблокировать пользователя?");
+    if (!shouldBlock) {
+      return;
+    }
+
+    try {
+      setErrorMessage("");
+      const blockedUser = await api.blockUser(userId);
+      setUsers((prev) => prev.map((user) => (user.id === blockedUser.id ? blockedUser : user)));
+      setFeedbackMessage("Пользователь заблокирован.");
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, "Не удалось заблокировать пользователя."));
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboardHeader">
         <div>
-          <div className="dashboardHeader__eyebrow">JWT + Refresh Tokens</div>
-          <h1>Управление товарами Tech Shop</h1>
+          <h1>Управление Tech Shop</h1>
         </div>
 
         <div className="userPanel">
@@ -144,6 +218,7 @@ export default function ProductsPage({ currentUser, onLogout }) {
               {currentUser.first_name} {currentUser.last_name}
             </div>
             <div className="userPanel__email">{currentUser.email}</div>
+            <div className="pill userPanel__role">{ROLE_LABELS[currentUser.role] ?? currentUser.role}</div>
           </div>
 
           <button type="button" className="ghostButton" onClick={onLogout}>
@@ -160,9 +235,20 @@ export default function ProductsPage({ currentUser, onLogout }) {
               <h2>Каталог</h2>
             </div>
 
-            <button className="primaryButton" onClick={openCreate}>
-              Создать товар
-            </button>
+            {canManageProducts ? (
+              <button className="primaryButton" onClick={openCreate}>
+                Создать товар
+              </button>
+            ) : null}
+          </div>
+
+          <div className="permissionNote">
+            Ваша роль: <strong>{ROLE_LABELS[currentUser.role] ?? currentUser.role}</strong>.{" "}
+            {currentUser.role === "user"
+              ? "Доступен только просмотр товаров."
+              : currentUser.role === "seller"
+                ? "Доступно создание и редактирование товаров."
+                : "Доступно управление товарами и пользователями."}
           </div>
 
           <form className="lookupPanel" onSubmit={handleFindById}>
@@ -193,6 +279,8 @@ export default function ProductsPage({ currentUser, onLogout }) {
           ) : (
             <ProductsList
               products={products}
+              canDelete={canDeleteProducts}
+              canEdit={canManageProducts}
               onView={handleView}
               onEdit={openEdit}
               onDelete={handleDelete}
@@ -229,12 +317,32 @@ export default function ProductsPage({ currentUser, onLogout }) {
             </div>
           ) : (
             <div className="detailsPlaceholder">
-              Выберите карточку товара или введите id, чтобы запросить
-              ` GET /api/products/:id `.
+              Выберите карточку товара или введите id, чтобы запросить `GET /api/products/:id`.
             </div>
           )}
         </aside>
       </main>
+
+      {isAdmin ? (
+        <section className="workspace workspace--users">
+          <div className="toolbar">
+            <div>
+              <div className="sectionLabel">Пользователи</div>
+              <h2>Управление учетными записями</h2>
+            </div>
+
+            <button className="secondaryButton" onClick={loadUsers} disabled={loadingUsers}>
+              {loadingUsers ? "Обновление..." : "Обновить список"}
+            </button>
+          </div>
+
+          {loadingUsers ? (
+            <div className="emptyState">Загрузка пользователей...</div>
+          ) : (
+            <UsersList users={users} onEdit={openUserEdit} onBlock={handleBlockUser} />
+          )}
+        </section>
+      ) : null}
 
       <ProductModal
         open={modalOpen}
@@ -242,6 +350,13 @@ export default function ProductsPage({ currentUser, onLogout }) {
         initialProduct={editingProduct}
         onClose={closeModal}
         onSubmit={handleSubmitModal}
+      />
+
+      <UserModal
+        open={userModalOpen}
+        user={editingUser}
+        onClose={closeUserModal}
+        onSubmit={handleSubmitUser}
       />
     </div>
   );

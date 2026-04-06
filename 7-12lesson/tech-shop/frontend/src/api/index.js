@@ -128,4 +128,12 @@ export const api = {
   updateProduct: async (id, payload) => (await apiClient.put(`/products/${id}`, payload)).data,
 
   deleteProduct: async (id) => (await apiClient.delete(`/products/${id}`)).data,
+
+  getUsers: async () => (await apiClient.get("/users")).data,
+
+  getUserById: async (id) => (await apiClient.get(`/users/${id}`)).data,
+
+  updateUser: async (id, payload) => (await apiClient.put(`/users/${id}`, payload)).data,
+
+  blockUser: async (id) => (await apiClient.delete(`/users/${id}`)).data,
 };
