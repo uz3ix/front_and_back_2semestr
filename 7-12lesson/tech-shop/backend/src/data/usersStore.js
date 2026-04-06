@@ -1,5 +1,25 @@
 const { createJsonStore } = require("./jsonStore");
 
+const defaultUsers = [
+  {
+    id: "admin001",
+    email: "admin@techshop.local",
+    first_name: "Админ",
+    last_name: "Системы",
+    password: "b1e80b2cee1c8cba55b8e4f3f80561e94b60e47161c60d67e787e489152e710d",
+    role: "admin",
+    blocked: false,
+  },
+  {
+    id: "seller01",
+    email: "seller@techshop.local",
+    first_name: "Ольга",
+    last_name: "Продавец",
+    password: "b92852b7f5483244f89cbd9c47239988083cb0f142522f9bfd08440f8f51bd0e",
+    role: "seller",
+    blocked: false,
+  },
+];
 
 const usersStore = createJsonStore("users.json", defaultUsers);
 

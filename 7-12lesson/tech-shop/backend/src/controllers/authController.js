@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { nanoid } = require("nanoid");
 
@@ -14,6 +14,11 @@ const ACCESS_SECRET = "access_secret";
 const REFRESH_SECRET = "refresh_secret";
 const ACCESS_EXPIRES_IN = "15m";
 const REFRESH_EXPIRES_IN = "7d";
+const PASSWORD_SALT = "tech-shop-static-salt";
+
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password + PASSWORD_SALT).digest("hex");
+}
 
 function generateAccessToken(user) {
   return jwt.sign(
@@ -82,7 +87,7 @@ async function register(req, res) {
     email: value.email,
     first_name: value.first_name,
     last_name: value.last_name,
-    password: await bcrypt.hash(value.password, 10),
+    password: hashPassword(value.password),
     role: "user",
     blocked: false,
   });
@@ -106,7 +111,7 @@ async function login(req, res) {
     return res.status(403).json({ error: "User is blocked" });
   }
 
-  const isValid = await bcrypt.compare(value.password, user.password);
+  const isValid = hashPassword(value.password) === user.password;
   if (!isValid) {
     return res.status(401).json({ error: "Invalid credentials" });
   }

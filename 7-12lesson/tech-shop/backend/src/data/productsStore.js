@@ -1,5 +1,28 @@
 const { createJsonStore } = require("./jsonStore");
 
+const defaultProducts = [
+  {
+    id: "prod001",
+    title: "iPhone 15",
+    category: "Смартфоны",
+    description: "6.1'' OLED, 128GB, A16 Bionic",
+    price: 99990,
+  },
+  {
+    id: "prod002",
+    title: "Samsung Galaxy S24",
+    category: "Смартфоны",
+    description: "AMOLED 120Hz, 256GB",
+    price: 89990,
+  },
+  {
+    id: "prod003",
+    title: "MacBook Air M3",
+    category: "Ноутбуки",
+    description: "13'', 16GB RAM, 512GB SSD",
+    price: 149990,
+  },
+];
 
 const productsStore = createJsonStore("products.json", defaultProducts);
 
