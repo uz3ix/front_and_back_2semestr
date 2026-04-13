@@ -8,6 +8,8 @@ const {
   updateProduct,
 } = require("../data/productsStore");
 const { normalizeAndValidateProduct } = require("../validators/productValidators");
+const { getIo } = require("../socket");
+const { sendPushToAll } = require("./pushController");
 
 async function createProduct(req, res) {
   const { ok, errors, value } = normalizeAndValidateProduct(req.body);
@@ -20,6 +22,12 @@ async function createProduct(req, res) {
     id: nanoid(6),
     ...value,
   });
+
+  // Уведомляем всех клиентов через WebSocket (практика 16)
+  try {
+    getIo().emit("productAdded", product);
+    await sendPushToAll({ title: "Новый товар!", body: product.name });
+  } catch (_) {}
 
   return res.status(201).json(product);
 }
@@ -51,7 +59,11 @@ async function replaceProduct(req, res) {
     return res.status(400).json({ error: "Validation error", details: errors });
   }
 
-  return res.status(200).json(await updateProduct(req.params.id, value));
+  const updated = await updateProduct(req.params.id, value);
+
+  try { getIo().emit("productUpdated", updated); } catch (_) {}
+
+  return res.status(200).json(updated);
 }
 
 async function deleteProduct(req, res) {
@@ -60,6 +72,8 @@ async function deleteProduct(req, res) {
   if (!removed) {
     return res.status(404).json({ error: "Product not found" });
   }
+
+  try { getIo().emit("productDeleted", req.params.id); } catch (_) {}
 
   return res.status(204).send();
 }

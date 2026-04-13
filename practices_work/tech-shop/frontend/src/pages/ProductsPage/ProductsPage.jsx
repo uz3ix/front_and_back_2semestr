@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 
 import { api } from "../../api";
 import ProductModal from "../../components/ProductModal";
 import ProductsList from "../../components/ProductsList";
 import UserModal from "../../components/UserModal";
 import UsersList from "../../components/UsersList";
+import PushNotifications from "../../components/PushNotifications";
 import "./ProductsPage.scss";
 
 function getApiErrorMessage(error, fallbackMessage) {
@@ -32,6 +34,42 @@ export default function ProductsPage({ currentUser, onLogout }) {
   const [editingProduct, setEditingProduct] = useState(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+
+  const socketRef = useRef(null);
+  const [wsToast, setWsToast] = useState("");
+
+  // Socket.IO — обновления в реальном времени (практика 16)
+  useEffect(() => {
+    const socket = io("http://localhost:3000");
+    socketRef.current = socket;
+
+    socket.on("productAdded", (product) => {
+      setProducts((prev) => {
+        if (prev.find((p) => p.id === product.id)) return prev;
+        return [product, ...prev];
+      });
+      showWsToast(`Новый товар: ${product.title}`);
+    });
+
+    socket.on("productUpdated", (product) => {
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? product : p)));
+      showWsToast(`Товар обновлён: ${product.title}`);
+    });
+
+    socket.on("productDeleted", (id) => {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      showWsToast("Товар удалён");
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  function showWsToast(msg) {
+    setWsToast(msg);
+    setTimeout(() => setWsToast(""), 3000);
+  }
+
+  const token = window.localStorage.getItem("accessToken");
 
   const isSeller = currentUser.role === "seller";
   const isAdmin = currentUser.role === "admin";
@@ -221,11 +259,32 @@ export default function ProductsPage({ currentUser, onLogout }) {
             <div className="pill userPanel__role">{ROLE_LABELS[currentUser.role] ?? currentUser.role}</div>
           </div>
 
+          <PushNotifications token={token} />
+
           <button type="button" className="ghostButton" onClick={onLogout}>
             Выйти
           </button>
         </div>
       </header>
+
+      {/* WS-уведомление (практика 16) */}
+      {wsToast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 16,
+            right: 16,
+            background: "#16a34a",
+            color: "#fff",
+            padding: "0.75rem 1.25rem",
+            borderRadius: 8,
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,.2)",
+          }}
+        >
+          {wsToast}
+        </div>
+      )}
 
       <main className="dashboardMain">
         <section className="workspace">
@@ -284,6 +343,7 @@ export default function ProductsPage({ currentUser, onLogout }) {
               onView={handleView}
               onEdit={openEdit}
               onDelete={handleDelete}
+              token={token}
             />
           )}
         </section>

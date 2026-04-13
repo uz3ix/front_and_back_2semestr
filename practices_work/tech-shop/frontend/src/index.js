@@ -9,3 +9,13 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Регистрация Service Worker (практика 13)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => console.log("SW зарегистрирован:", reg.scope))
+      .catch((err) => console.error("SW ошибка:", err));
+  });
+}

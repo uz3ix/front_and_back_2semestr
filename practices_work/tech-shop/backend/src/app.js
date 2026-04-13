@@ -5,6 +5,7 @@ const swaggerUi = require("swagger-ui-express");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
+const pushRoutes = require("./routes/pushRoutes");
 const { requestLogger } = require("./middleware/requestLogger");
 const { notFoundHandler } = require("./middleware/notFoundHandler");
 const { errorHandler } = require("./middleware/errorHandler");
@@ -27,6 +28,7 @@ function createApp() {
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/products", productRoutes);
+  app.use("/api/push", pushRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

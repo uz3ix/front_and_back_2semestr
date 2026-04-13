@@ -9,6 +9,7 @@ export default function ProductsList({
   onView,
   onEdit,
   onDelete,
+  token,
 }) {
   if (!products.length) {
     return <div className="emptyState">Товаров пока нет.</div>;
@@ -25,6 +26,7 @@ export default function ProductsList({
           onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
+          token={token}
         />
       ))}
     </div>

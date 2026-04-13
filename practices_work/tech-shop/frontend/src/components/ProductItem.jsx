@@ -1,6 +1,7 @@
 import React from "react";
+import { ReminderButton } from "./PushNotifications";
 
-export default function ProductItem({ product, canDelete, canEdit, onView, onEdit, onDelete }) {
+export default function ProductItem({ product, canDelete, canEdit, onView, onEdit, onDelete, token }) {
   return (
     <article className="productCard">
       <div className="productCard__meta">ID: {product.id}</div>
@@ -25,6 +26,7 @@ export default function ProductItem({ product, canDelete, canEdit, onView, onEdi
             Удалить
           </button>
         ) : null}
+        <ReminderButton product={product} token={token} />
       </div>
     </article>
   );
